@@ -1,0 +1,10 @@
+{
+    "prettier.endOfLine": "auto",
+    "prettier.proseWrap": "never",
+    "prettier.trailingComma": "es5",
+    "prettier.bracketSameLine": false,
+    "prettier.arrowParens": "always",
+    "prettier.experimentalTernaries": false,
+    "prettier.htmlWhitespaceSensitivity": "css",
+    "prettier.printWidth": 200
+}
