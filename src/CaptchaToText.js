@@ -1,8 +1,8 @@
 import Tesseract from "tesseract.js";
 
-export async function CaptchaToText() {
+export async function CaptchaToText(image_path) {
   try {
-    const {data: { text }} = await Tesseract.recognize("captcha.png", "eng");
+    const {data: { text }} = await Tesseract.recognize(image_path, "eng");
 
     const captchaText = text.split(/[\n ]/)[0].trim();
 
