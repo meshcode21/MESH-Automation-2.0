@@ -2,14 +2,14 @@ import puppeteer from "puppeteer";
 import { get_captcha_text } from "./CaptchaToText.js";
 import { getIsRunning } from "../dataStore.js";
 
-export async function AutoEngine(data, statusCallback) {
+export async function AutoEngine(currentIndex, data, statusCallback,endCallback) {
   let status = "";
 
-  const browser = await puppeteer.launch({ headless: false });
+  const browser = await puppeteer.launch({ headless: true });
   const page = await browser.newPage();
 
-  for (let count = 0; count < data.length; count++) {
-    await statusCallback({index: count, status: "running"})
+  for (let i = currentIndex; i < data.length; i++) {
+    await statusCallback({index: i, status: "running"})
     await page.goto("https://dvprogram.state.gov/ESC/Default.aspx");
     await page.waitForSelector("#escform");
 
@@ -21,9 +21,9 @@ export async function AutoEngine(data, statusCallback) {
     const YOB_inputField = await page.waitForSelector(`::-p-xpath(//*[@id="txtYOB"])`);
 
     //   initialization of client data...
-    const cn = data[count].confirmationNumber;
-    const lastName = data[count].name.split(",")[0];
-    const yob = data[count].DOB;
+    const cn = data[i].confirmationNumber;
+    const lastName = data[i].name.split(",")[0];
+    const yob = data[i].DOB;
 
     //   typing data in input fields...
     await CN_inputField.type(cn);
@@ -42,7 +42,7 @@ export async function AutoEngine(data, statusCallback) {
       //convert and fill the captcha text...
       const Code_inputField = await page.waitForSelector(`::-p-xpath(//*[@id="txtCodeInput"])`);
       // const captchaText = await CaptchaToText("captcha.png");
-      const captchaText = await get_captcha_text("captcha.png");
+      const captchaText = "";//await get_captcha_text("captcha.png");
       await Code_inputField.type(captchaText != "" ? captchaText : "xxxx");
 
       await SubmitButton.focus();
@@ -67,17 +67,18 @@ export async function AutoEngine(data, statusCallback) {
         if (text == "HAS NOT BEEN SELECTED") status = "not selected";
         else status = "selected";
 
-        await statusCallback({index: count,status: status});
+        await statusCallback({index: i,status: status});
         break;
 
       } else if (why_page_change == "timeOut") {
         status = "time out";
 
-        await statusCallback({index: count,status: status});
+        await statusCallback({index: i,status: status});
         break;
       }
     }
     if(!getIsRunning()) break;
   }
   browser.close();
+  await endCallback();
 }

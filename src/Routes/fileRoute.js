@@ -27,4 +27,8 @@ fileRoute.post("/upload", upload.single("file"), async (req, res) => {
   }
 });
 
+fileRoute.get("/downloadResult",(req,res)=>{
+
+});
+
 export default fileRoute;
