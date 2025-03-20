@@ -6,5 +6,5 @@
     "prettier.arrowParens": "always",
     "prettier.experimentalTernaries": false,
     "prettier.htmlWhitespaceSensitivity": "css",
-    "prettier.printWidth": 300
+    "prettier.printWidth": 500
 }

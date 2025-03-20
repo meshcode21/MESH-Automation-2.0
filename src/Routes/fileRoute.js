@@ -1,32 +1,23 @@
 import express from "express";
 import multer from "multer";
-import xlsx from "xlsx"
-import { usersData } from "../dataStore.js";
+import { ExcellToJSON } from "../utils/ExcellConverter.js";
+
 
 const fileRoute = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
 fileRoute.get("/", (req, res) => {
-  res.send("this is action router.");
+  res.send("this is file router.");
 });
 
-fileRoute.post("/upload", upload.single("file"), (req, res) => {
+fileRoute.post("/upload", upload.single("file"), async (req, res) => {
   console.log(req.file);
   if (!req.file) {
     return res.status(400).json({ message: "No file uploaded" });
   }
 
   try {
-    // Read file from buffer
-    const workbook = xlsx.read(req.file.buffer, { type: "buffer" });
-
-    // Get first sheet name
-    const sheetName = workbook.SheetNames[0];
-
-    // Convert sheet to JSON
-    const jsonData = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
-
-    // usersData = jsonData;
+    const jsonData = ExcellToJSON(req);
 
     res.json({ message: "File processed successfully", data: jsonData });
   } catch (error) {
