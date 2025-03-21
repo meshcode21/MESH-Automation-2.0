@@ -1,5 +1,4 @@
 import xlsx from "xlsx";
-import { setData } from "../dataStore.js";
 
 function ExcellToJSON(req) {
   // Read file from buffer
@@ -10,8 +9,6 @@ function ExcellToJSON(req) {
 
   // Convert sheet to JSON
   const jsonData = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
-
-  setData(jsonData);
 
   return jsonData;
 }

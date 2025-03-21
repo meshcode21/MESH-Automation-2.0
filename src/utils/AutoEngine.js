@@ -1,15 +1,18 @@
 import puppeteer from "puppeteer";
 import { get_captcha_text } from "./CaptchaToText.js";
-import { getIsRunning } from "../dataStore.js";
+import { getIsRunning, storeResult } from "../data/dataProvider.js";
 
 export async function AutoEngine(currentIndex, data, statusCallback,endCallback) {
   let status = "";
 
-  const browser = await puppeteer.launch({ headless: true });
+  if(currentIndex==0) storeResult(null);
+
+  const browser = await puppeteer.launch({ headless: false });
   const page = await browser.newPage();
 
   for (let i = currentIndex; i < data.length; i++) {
-    await statusCallback({index: i, status: "running"})
+    await statusCallback({index: i, status: "running"});
+    
     await page.goto("https://dvprogram.state.gov/ESC/Default.aspx");
     await page.waitForSelector("#escform");
 
@@ -42,7 +45,7 @@ export async function AutoEngine(currentIndex, data, statusCallback,endCallback)
       //convert and fill the captcha text...
       const Code_inputField = await page.waitForSelector(`::-p-xpath(//*[@id="txtCodeInput"])`);
       // const captchaText = await CaptchaToText("captcha.png");
-      const captchaText = "";//await get_captcha_text("captcha.png");
+      const captchaText = await get_captcha_text("captcha.png");
       await Code_inputField.type(captchaText != "" ? captchaText : "xxxx");
 
       await SubmitButton.focus();
