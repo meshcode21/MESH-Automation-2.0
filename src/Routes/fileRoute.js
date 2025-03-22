@@ -34,8 +34,6 @@ fileRoute.post("/upload", upload.single("file"), async (req, res) => {
 
 fileRoute.get("/downloadResult",(req,res)=>{
   const results = getResult();
-
-  console.log(results);
   
 
   // Convert extracted data to Excel when all files are processed

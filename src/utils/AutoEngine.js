@@ -2,40 +2,39 @@ import puppeteer from "puppeteer";
 import { get_captcha_text } from "./CaptchaToText.js";
 import { getIsRunning, storeResult } from "../data/dataProvider.js";
 
-export async function AutoEngine(currentIndex, data, statusCallback,endCallback) {
+export async function AutoEngine(currentIndex, data, statusCallback, endCallback) {
   let status = "";
 
-  if(currentIndex==0) storeResult(null);
+  if (currentIndex == 0) storeResult(null);
 
   const browser = await puppeteer.launch({ headless: false });
   const page = await browser.newPage();
 
   for (let i = currentIndex; i < data.length; i++) {
-    await statusCallback({index: i, status: "running"});
-    
+    await statusCallback({ index: i, status: "running" });
+
     await page.goto("https://dvprogram.state.gov/ESC/Default.aspx");
     await page.waitForSelector("#escform");
 
     await page.click(`::-p-xpath(//*[@id="main"]/div[2]/div/p[3]/a)`);
+
+    //   initialization of client data...
+    const cn = data[i].confirmationNumber;
+    const lastName = data[i].name.split(",")[0];
+    const yob = data[i].DOB.toString();
 
     //   initialization of input fields...
     const CN_inputField = await page.waitForSelector("::-p-xpath(//*[@id='txtCN'])");
     const LastName_inputField = await page.waitForSelector(`::-p-xpath(//*[@id="txtLastName"])`);
     const YOB_inputField = await page.waitForSelector(`::-p-xpath(//*[@id="txtYOB"])`);
 
-    //   initialization of client data...
-    const cn = data[i].confirmationNumber;
-    const lastName = data[i].name.split(",")[0];
-    const yob = data[i].DOB;
-
-    //   typing data in input fields...
     await CN_inputField.type(cn);
     await LastName_inputField.type(lastName);
     await YOB_inputField.type(yob);
 
     //   await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    while(true) {
+    while (true) {
       const SubmitButton = await page.waitForSelector(`::-p-xpath(//*[@id="btnCSubmit"])`);
 
       //   save captcha image...
@@ -57,30 +56,42 @@ export async function AutoEngine(currentIndex, data, statusCallback,endCallback)
       const container = await page.waitForSelector(`::-p-xpath(//*[@id="main"])`);
       const why_page_change = await container.evaluate((el) => {
         if (el.childElementCount < 2) {
-          if (el.children[0].children[0].childElementCount > 1) return "captchaRight";
-          else return "timeOut";
+          if (el.children[0].childElementCount == 3) return "captchaRight";
+          else{
+            if(el.children[0].children[0].childElementCount == 2) return "captchaRight";
+            else return "timeOut";
+          } 
         } else return "captchaWrong";
       });
 
+      // let status;
       if (why_page_change == "captchaRight") {
-        const text = await container.evaluate((el) => {
-          return el.children[0].children[0].children[0].children[0].innerText;
+        status = await container.evaluate((el) => {
+          if (el.children[0].childElementCount == 1) return "not selected";
+          else return "selected";
         });
 
-        if (text == "HAS NOT BEEN SELECTED") status = "not selected";
-        else status = "selected";
+        // if (text == "HAS NOT BEEN SELECTED") status = "not selected";
+        // else status = "selected";
+        if (status == "selected") {
 
-        await statusCallback({index: i,status: status});
+          const selectedUserAddress = await container.evaluate((el) => {
+            const userInfo = el.children[0].children[2].children[0].children[5].innerText.split("\n");
+            return  userInfo[2];
+          });
+          await statusCallback({ index: i, status: status, address: selectedUserAddress });
+        } else {
+          await statusCallback({ index: i, status: status });
+        }
         break;
-
       } else if (why_page_change == "timeOut") {
         status = "time out";
 
-        await statusCallback({index: i,status: status});
+        await statusCallback({ index: i, status: status });
         break;
       }
     }
-    if(!getIsRunning()) break;
+    if (!getIsRunning()) break;
   }
   browser.close();
   await endCallback();

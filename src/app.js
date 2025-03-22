@@ -5,6 +5,7 @@ import { WebSocketServer } from "ws";
 import fileRoute from "./Routes/fileRoute.js";
 import { getData, setData, setIsRunning, storeResult } from "./data/dataProvider.js";
 import { AutoEngine } from "./utils/AutoEngine.js";
+import { userInfo } from "os";
 
 const port = 5000;
 const app = express();
@@ -41,11 +42,14 @@ wss.on("connection", async (ws) => {
 
           if (statusData.status != "running") {
             const userData = data.find((item, index) => index == statusData.index);
-            storeResult({ ...userData, status: statusData.status });
+
+            if (statusData.status == "selected") storeResult({ ...userData, status: statusData.status, address: statusData.address });
+            else storeResult({ ...userData, status: statusData.status });
           }
         },
         () => {
           ws.send(JSON.stringify({ message: "automation terminated" }));
+          console.log("automtion terminated");
         }
       );
     } else {
