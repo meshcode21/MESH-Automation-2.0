@@ -3,9 +3,12 @@ import { createServer } from "http";
 import { WebSocketServer } from "ws";
 
 import fileRoute from "./Routes/fileRoute.js";
-import { getData, setData, setIsRunning, storeResult } from "./data/dataProvider.js";
+import { getData, setIsRunning, storeResult } from "./data/dataProvider.js";
 import { AutoEngine } from "./utils/AutoEngine.js";
-import { userInfo } from "os";
+
+import { fileURLToPath } from 'url';
+import path,{join} from 'path';
+
 
 const port = 5000;
 const app = express();
@@ -14,8 +17,13 @@ const server = createServer(app);
 app.use(express.json());
 app.use("/api/file", fileRoute);
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Serve static files from the React build directory
+app.use(express.static(join(__dirname, '../dist'))); // Adjust 'client/dist' to your actual build folder
+
 app.get("/", (req, res) => {
-  res.send("server running...");
+ res.sendFile(join(__dirname,"../dist","index.html"));
 });
 
 // WebSocket server that listens only on the "/events" path
