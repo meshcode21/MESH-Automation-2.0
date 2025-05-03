@@ -34,7 +34,6 @@ fileRoute.post("/upload", upload.single("file"), async (req, res) => {
 
 fileRoute.get("/downloadResult",(req,res)=>{
   const results = getResult();
-  
 
   // Convert extracted data to Excel when all files are processed
   const workbook = xlsx.utils.book_new();
@@ -45,7 +44,9 @@ fileRoute.get("/downloadResult",(req,res)=>{
   xlsx.writeFile(workbook, excelFilePath);
   
   res.download(excelFilePath, (err) => {
-    if (err) console.error('Error downloading file:', err); 
+    if (!err) console.log('File downloaded successfully'); 
+    else
+      console.error('Error downloading file:', err); 
   });
 });
  
